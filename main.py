@@ -17,10 +17,6 @@ def verify():
 
 @app.route("/trello-webhook", methods=["POST"])
 def trello_event():
-    print(f"Webhook URL: {DISCORD_WEBHOOK_URL}")
-    print(f"Trello API Key: {TRELLO_API_KEY}")
-    print(f"Trello Token: {TRELLO_TOKEN}")
-
     data = flask.request.json
     are_env_vars_valid = DISCORD_WEBHOOK_URL and TRELLO_API_KEY and TRELLO_TOKEN
     if not data or not are_env_vars_valid:
