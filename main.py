@@ -31,15 +31,17 @@ def trello_event():
     comment = action.get("data", {}).get("text", "")
 
     message = None
+    webhook = None
 
     if action_type == "createCard":
         message = f"📋 **{member}** created card **{card}** in *{list_name}*"
+        webhook = discord_webhook.DiscordWebhook(url=DISCORD_WEBHOOK_URL, content=message)  # type: ignore
     elif action_type == "commentCard":
         message = f"💬 **{member}** commented on **{card}**: {comment}"
+        webhook = discord_webhook.DiscordWebhook(url=DISCORD_WEBHOOK_URL, content=message)  # type: ignore
     elif action_type == "updateCard" and list_after:
         message = f"🔄 **{member}** moved **{card}** to *{list_after}*"
-    # elif action_type == "addMemberToCard":
-    #     message = f"👤 **{member}** was assigned to **{card}**"
+        webhook = discord_webhook.DiscordWebhook(url=DISCORD_WEBHOOK_URL, content=message)  # type: ignore
     elif action_type == "addAttachmentToCard":
         attachment = action.get("data", {}).get("attachment", {})
         attachment_name = attachment.get("name", "a file")
@@ -47,6 +49,9 @@ def trello_event():
         is_image = attachment_url.lower().endswith((".png", ".jpg", ".jpeg", ".gif", ".webp"))
 
         if is_image:
+            message = f"🖼️ **{member}** attached an image **{attachment_name}** to **{card}**"
+            webhook = discord_webhook.DiscordWebhook(url=DISCORD_WEBHOOK_URL, content=message)  # type: ignore
+
             # Download the image and send it as a file
             image_response = requests.get(
                 attachment_url,
@@ -55,23 +60,14 @@ def trello_event():
                 }
             )
 
-            # print("Status:", image_response.status_code)
-            # print("Size:", len(image_response.content))
-            # print("Content-Type:", image_response.headers.get("Content-Type"))
-
-            webhook = discord_webhook.DiscordWebhook(
-                url=DISCORD_WEBHOOK_URL,  # type: ignore
-                content=f"🖼️ **{member}** attached an image **{attachment_name}** to **{card}**"
-            )
             webhook.add_file(file=image_response.content, filename=attachment_name)
-            webhook.execute()
-            return "", 200
         else:
             message = f"📎 **{member}** attached a file **{attachment_name}** to **{card}**\n{attachment_url}"
+            webhook = discord_webhook.DiscordWebhook(url=DISCORD_WEBHOOK_URL, content=message)  # type: ignore
 
-    if message:
+    if webhook:
         print(message)
-        discord_webhook.DiscordWebhook(url=DISCORD_WEBHOOK_URL, content=message).execute()  # type: ignore
+        webhook.execute()
 
     return "", 200
 
