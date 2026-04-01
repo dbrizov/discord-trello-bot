@@ -1,7 +1,7 @@
 import os
 import flask
-import discord_webhook
 import requests
+import discord_webhook
 
 app = flask.Flask(__name__)
 
